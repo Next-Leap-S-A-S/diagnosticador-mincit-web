@@ -36,13 +36,24 @@
   const token = () => sessionStorage.getItem(TOKEN_KEY) || "";
   function showApp() { $("gate").hidden = true; $("app").hidden = false; }
   function showGate(msg) { $("gate").hidden = false; $("app").hidden = true; if (msg) { $("gateErr").textContent = msg; $("gateErr").hidden = false; } }
-  if (token()) showApp();
-  $("gateBtn").onclick = () => {
+  if (token()) showApp(); // si el código guardado ya no sirve, la primera llamada devuelve al acceso
+  $("gateBtn").onclick = async () => {
     const v = $("gateInput").value.trim();
     if (!v) return;
     sessionStorage.setItem(TOKEN_KEY, v);
-    $("gateErr").hidden = true;
-    showApp();
+    $("gateBtn").disabled = true;
+    try {
+      const res = await fetch(API_BASE + "/api/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${v}` },
+        body: JSON.stringify({ modo: "ping" }),
+      });
+      if (res.status === 401) { sessionStorage.removeItem(TOKEN_KEY); $("gateErr").textContent = "Código incorrecto. Revisa que esté igual a como te lo dieron."; $("gateErr").hidden = false; }
+      else { $("gateErr").hidden = true; showApp(); }
+    } catch {
+      $("gateErr").textContent = "No pude conectar con el servidor. Revisa tu conexión."; $("gateErr").hidden = false;
+    }
+    $("gateBtn").disabled = false;
   };
   $("gateInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("gateBtn").click(); });
 
