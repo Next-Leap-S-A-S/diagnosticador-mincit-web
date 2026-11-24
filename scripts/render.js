@@ -58,8 +58,10 @@ function renderFlujo(f) {
     <h3>${esc(f.nombre)}</h3>
     <p>${esc(f.objetivo)}</p>
     <p>Trigger: ${badge(f.trigger?.tipo || "", "moderada")} ${esc(f.trigger?.descripcion)} · Intervención: ${badge(f.intervencion || "", "baja")}</p>
-    <h3>Pasos</h3><div class="flow">${flow}</div>
-    <div class="row"><button class="small" data-act="copy-mermaid">Copiar diagrama (Mermaid)</button></div>
+    <h3>Diagrama</h3>
+    <div id="diagram" class="diagram"><p class="muted">Dibujando el diagrama...</p></div>
+    <div class="row"><button class="small" data-act="dl-svg">Descargar diagrama (.svg)</button><button class="small" data-act="dl-png">Descargar diagrama (.png)</button><button class="small" data-act="copy-mermaid">Copiar código Mermaid</button></div>
+    <h3>Pasos en detalle</h3><div class="flow">${flow}</div>
     ${f.fuentesDeDatos ? `<h3>Fuentes de datos</h3>${ul(f.fuentesDeDatos)}` : ""}
     ${f.puntosDeControlHumano ? `<h3>Puntos de control humano</h3>${ul(f.puntosDeControlHumano)}` : ""}
     ${f.erroresComunes ? `<h3>Errores comunes</h3><table class="t"><tr><th>Falla</th><th>Qué hacer</th></tr>${f.erroresComunes.map((x) => `<tr><td>${esc(x.falla)}</td><td>${esc(x.queHacer)}</td></tr>`).join("")}</table>` : ""}
@@ -89,4 +91,44 @@ function renderPrompt(p) {
     <div class="row"><button class="small" data-act="copy-prompt">Copiar prompt</button><button class="small" data-act="dl-prompt">Descargar .md</button></div>
     <pre class="prompt">${esc(p.textoCompleto)}</pre>
   </div>`;
+}
+
+// Dibuja el diagrama con Mermaid (se carga desde internet la primera vez).
+let mermaidPromise = null;
+function loadMermaid() {
+  if (!mermaidPromise) {
+    mermaidPromise = import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then((m) => {
+      m.default.initialize({ startOnLoad: false, securityLevel: "strict", theme: "base", flowchart: { curve: "basis", htmlLabels: true },
+        themeVariables: { fontFamily: "Inter, system-ui, sans-serif", fontSize: "14px", primaryColor: "#f4f4f6", primaryBorderColor: "#8f9099", lineColor: "#6b6c75" } });
+      return m.default;
+    });
+  }
+  return mermaidPromise;
+}
+
+function flujoToMermaidStyled(f) {
+  const base = flujoToMermaid(f);
+  const by = { trigger: [], accion: [], decision: [], humano: [], salida: [] };
+  (f.nodos || []).forEach((n) => (by[n.tipo] || by.accion).push(n.id));
+  const cls = [
+    "  classDef trigger fill:#f3fbf6,stroke:#16a34a,stroke-width:2px",
+    "  classDef accion fill:#ffffff,stroke:#6b6c75",
+    "  classDef decision fill:#fff9ef,stroke:#d97706,stroke-width:2px",
+    "  classDef humano fill:#faf5ff,stroke:#9333ea,stroke-width:2px",
+    "  classDef salida fill:#f2f6ff,stroke:#2563eb,stroke-width:2px",
+  ];
+  Object.entries(by).forEach(([k, ids]) => ids.length && cls.push(`  class ${ids.join(",")} ${k}`));
+  return base + "\n" + cls.join("\n");
+}
+
+async function drawFlujo(f, container) {
+  try {
+    const mermaid = await loadMermaid();
+    const { svg } = await mermaid.render("mm" + Date.now(), flujoToMermaidStyled(f));
+    container.innerHTML = svg;
+    const el = container.querySelector("svg");
+    if (el) { el.style.maxWidth = "100%"; el.style.height = "auto"; }
+  } catch (e) {
+    container.innerHTML = '<p class="muted">No pude dibujar el diagrama (necesita conexión a internet). Los pasos están abajo y puedes copiar el código Mermaid.</p>';
+  }
 }

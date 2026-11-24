@@ -91,3 +91,5 @@ pre.prompt{white-space:pre-wrap;word-break:break-word;font-family:var(--mono);fo
 }
 
 .steps{margin:0 0 12px;padding-left:20px;color:var(--ink75)}
+.diagram{border:1px solid var(--line);border-radius:12px;padding:14px;overflow:auto;background:#fff}
+[hidden]{display:none!important}

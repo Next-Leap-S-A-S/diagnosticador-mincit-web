@@ -180,6 +180,7 @@
         <div class="row"><button class="primary" data-act="gen" data-name="${name}">${data ? "Volver a generar" : "Generar"} ${LABEL[name]}</button><span class="status" id="s_${name}">${needs}</span></div>
         <div class="bar" id="b_${name}" hidden><i></i></div>
       </div>`;
+    if (name === "flujo" && data) drawFlujo(data, $("diagram"));
     $("dot_" + name).className = "dot" + (data ? " done" : "");
     $("n_" + name).addEventListener("input", (e) => { state.notas[name] = e.target.value; save(); });
   }
@@ -230,9 +231,37 @@
     if (!b) return;
     if (b.dataset.act === "gen") generate(b.dataset.name);
     if (b.dataset.act === "copy-prompt") copy(state.prompt?.textoCompleto, b);
+    if (b.dataset.act === "dl-svg") downloadSvg();
+    if (b.dataset.act === "dl-png") downloadPng();
     if (b.dataset.act === "copy-mermaid") copy(flujoToMermaid(state.flujo), b);
     if (b.dataset.act === "dl-prompt") download("prompt-rci.md", state.prompt?.textoCompleto || "");
   });
+
+  function svgText() {
+    const el = $("diagram")?.querySelector("svg");
+    if (!el) return null;
+    const c = el.cloneNode(true);
+    c.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    return { el, text: new XMLSerializer().serializeToString(c) };
+  }
+  function downloadSvg() {
+    const s = svgText(); if (!s) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([s.text], { type: "image/svg+xml" }));
+    a.download = "flujo-agente.svg"; a.click(); URL.revokeObjectURL(a.href);
+  }
+  function downloadPng() {
+    const s = svgText(); if (!s) return;
+    const box = s.el.getBoundingClientRect();
+    const w = Math.ceil(box.width * 2), h = Math.ceil(box.height * 2);
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      const ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+      cv.toBlob((b) => { const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "flujo-agente.png"; a.click(); URL.revokeObjectURL(a.href); });
+    };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s.text.replace(/<br\s*>/g, "<br/>"));
+  }
 
   function switchTab(name) {
     TABS.forEach((t) => { $("pane_" + t).hidden = t !== name; });
