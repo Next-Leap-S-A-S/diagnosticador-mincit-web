@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnosticador de proyectos de IA | Mincit | Next Leap</title>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/app.css">
+</head>
+<body>
+
+<div id="gate" class="gate card">
+  <h2>Código de la sesión</h2>
+  <p>Escribe el código que te dio el facilitador del programa.</p>
+  <input id="gateInput" type="password" placeholder="Código de la sesión" autocomplete="off">
+  <button id="gateBtn" class="primary">Entrar</button>
+  <div id="gateErr" class="err" hidden>Código incorrecto.</div>
+</div>
+
+<div id="app" hidden>
+  <div class="wrap">
+    <header class="top">
+      <p class="eyebrow">Next Leap · Programa de IA Mincit</p>
+      <h1>Diagnosticador de proyectos de IA</h1>
+      <p class="lead">Cuenten su idea de proyecto, completen el lienzo con ayuda de IA y obtengan tres entregables: el diagnóstico de su proyecto, el flujo del agente paso a paso y el prompt RCI extenso, listo para pegar en su plataforma.</p>
+      <ol class="steps"><li>Cuenten la idea o llenen los 6 campos.</li><li>Usen «Mejorar con IA» en cada campo hasta que quede sólido.</li><li>Generen diagnóstico, flujo y prompt, y descarguen el informe.</li></ol>
+      <div class="top-actions">
+        <button id="btnNuevo" class="ghost">Empezar de nuevo</button>
+        <span id="saved" class="muted">Lo que escriban se guarda solo en este navegador.</span>
+      </div>
+    </header>
+
+    <section class="card idea">
+      <h2>¿Empiecen aquí: cuenten la idea</h2>
+      <p class="muted">Escriban la idea con sus palabras, como se la contarían a un compañero. Claude la organiza en los 6 campos y marca lo que falta confirmar.</p>
+      <textarea id="ideaText" rows="4" placeholder="Ej. En la oficina jurídica pasamos muchas horas buscando jurisprudencia para cada proyecto de fallo disciplinario. Queremos un agente que busque las sentencias aplicables y nos arme un resumen..."></textarea>
+      <div class="row">
+        <button id="btnIdea" class="primary">Organizar con Claude</button>
+        <span id="ideaMsg" class="muted"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>1. Lienzo del proyecto</h2>
+      <div class="grid2">
+        <label>Dependencia o área
+          <input id="f_dependencia" list="deps" placeholder="Ej. Oficina de Control Interno Disciplinario">
+          <datalist id="deps">
+            <option>Oficina Asesora Jurídica</option>
+            <option>Control Interno Disciplinario</option>
+            <option>Atención al ciudadano</option>
+            <option>Comercio exterior</option>
+            <option>Turismo</option>
+            <option>Industria y mipymes</option>
+            <option>Talento humano</option>
+            <option>Contratación</option>
+            <option>Gestión financiera</option>
+            <option>Tecnologías de la información</option>
+          </datalist>
+        </label>
+        <label>Plataforma de IA que tienen disponible
+          <input id="f_plataforma" placeholder="Ej. Microsoft Copilot, Claude, ChatGPT">
+        </label>
+        <label>Nombre del grupo
+          <input id="f_grupo" placeholder="Ej. Grupo 3">
+        </label>
+        <label>Integrantes
+          <input id="f_integrantes" placeholder="Nombres separados por coma">
+        </label>
+      </div>
+
+      <div id="fields"></div>
+    </section>
+
+    <section class="card">
+      <h2>2. Entregables</h2>
+      <p class="muted">Cada uno se puede generar por separado. El flujo usa el diagnóstico y el prompt usa los dos anteriores, así que conviene ir en orden.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="diagnostico" role="tab">Diagnóstico <span class="dot" id="dot_diagnostico"></span></button>
+        <button class="tab" data-tab="flujo" role="tab">Flujo del agente <span class="dot" id="dot_flujo"></span></button>
+        <button class="tab" data-tab="prompt" role="tab">Prompt RCI <span class="dot" id="dot_prompt"></span></button>
+      </div>
+
+      <div id="pane_diagnostico" class="pane"></div>
+      <div id="pane_flujo" class="pane" hidden></div>
+      <div id="pane_prompt" class="pane" hidden></div>
+
+      <div class="row end">
+        <button id="btnTodo" class="primary">Generar los tres en orden</button>
+        <button id="btnMd" class="ghost">Descargar informe (.md)</button>
+        <button id="btnPrint" class="ghost">Imprimir / guardar PDF</button>
+      </div>
+    </section>
+
+    <footer class="foot">Next Leap. Solo el texto del lienzo se envía a Claude para generar los resultados. No pegues datos personales de ciudadanos ni información reservada.</footer>
+  </div>
+</div>
+
+<script src="scripts/render.js"></script>
+<script src="scripts/app.js"></script>
+</body>
+</html>
